@@ -50,7 +50,6 @@
 
 // #pragma config statements should precede project file includes.
 
-
 #include "xc.h"
 #include "ADC.h"
 #include "IOs.h"
@@ -58,9 +57,16 @@
 #include "clkChange.h"
 #include "interruptSetup.h"
 #include "timerSetup.h"
+#include "pwm.h"
+
+extern uint8_t PBevent;
+extern uint8_t T3event;
+volatile uint16_t pwm_threshold;
 
 int main(void) {
-    newClk(500); // set the clock to 8MHz
+//    newClk(500); // set the clock to 500kHz
+    newClk(8); // set the clock to 8MHz
+    
     //initialize all other parts of the program
     InitIO();
     InitTimers();
@@ -74,6 +80,20 @@ int main(void) {
 
     while(1) {
         Idle();
+        
+        if(PBevent) {
+            PBevent = 0;
+            updateIOstate();
+        }
+        if(T3event) {
+            T3event = 0;
+            uint16_t bright = do_ADC(1);
+            Disp2Dec(bright);
+            Disp2String("\n\r");
+//            do_PWM(bright);
+            pwm_threshold = bright * PWM_PERIOD / 100;
+        }
+        
     }
     
     return 0;

@@ -9,6 +9,7 @@
 
 #include "xc.h"
 #include "interruptSetup.h"
+#include "pwm.h"
 
 void InitInterrupt() {
     // Clear Interrupt Flags
@@ -37,9 +38,8 @@ void InitInterrupt() {
 
 // ISR Definitions
 uint8_t PBevent, T1event, T2event, T3event = 0; // global interrupt flags
-
-uint32_t time = 0; //tracks the time passed since program start in 10ms increments
-// Dont worry, program can run for over a month without any overflow issues
+uint32_t time = 0; //tracks the time passed since program start
+extern volatile uint16_t pwm_threshold;
 
 void __attribute__((interrupt, no_auto_psv)) _CNInterrupt(void) {
     IFS1bits.CNIF = 0; // Clear CN Interrupt Flag
@@ -57,7 +57,15 @@ void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void) {
 }
 
 void __attribute__((interrupt, no_auto_psv)) _T3Interrupt(void) {
-    IFS0bits.T3IF = 0; // Clear Timer3 Interrupt Flag
-    time++;
+    IFS0bits.T3IF = 0;
+    time += 1;
     T3event = 1;
+    
+    static uint16_t pwm_counter = 0;
+
+    pwm_counter++;
+    if (pwm_counter >= PWM_PERIOD) pwm_counter = 0;
+
+
+    PORTBbits.RB9 = (pwm_counter < pwm_threshold);
 }
