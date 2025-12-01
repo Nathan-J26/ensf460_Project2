@@ -5,7 +5,7 @@ import pandas as pd
 
 PORT = 'COM3' # UART port Change if needed
 BAUD = 4800 
-DURATION = 10 # seconds to record data
+DURATION = 60 # seconds to record data
 
 print(f"Attempting to connect to {PORT}...")
 try:
@@ -22,17 +22,17 @@ voltageValues = []
 timeValues = []
 
 time.sleep(0.1)
-while(1): # waits until PB2 is pressed to begin sampling ADC
+while(1): # waits until PB3 is pressed to begin sampling ADC
     line = ser.readline().decode('utf-8', errors='ignore').strip()
     line = "".join([char for char in line if char.isalpha()])
-    print("Mode 1: Press PB2 to begin sampling\r", end='')
-    if(len(line) == 0): # if no alpha characters are read, that means PB2 was pressed
+    print("Mode 1: Press PB3 to begin sampling\r", end='')
+    if(len(line) == 0): # if no alpha characters are read, that means PB3 was pressed
         break # break to begin sampling
         
     time.sleep(0.1)
 
 print(f"Collecting {DURATION} seconds of data from {PORT}...")
-for i in range(DURATION * 10): # 10 seconds in 100ms increments
+for i in range(DURATION * 10): # 60 seconds in 100ms increments
     line = ser.readline().decode('utf-8', errors='ignore').strip()
     line = "".join([char for char in line if char.isdecimal()]) # convert read string to proper format
     print(f"ADC Reading: {line}")

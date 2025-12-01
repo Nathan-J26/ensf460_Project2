@@ -12,6 +12,7 @@
 #include "timerSetup.h"
 #include "delay_ms.h"
 #include "button.h"
+#include "pwm.h"
 
 typedef enum {
     STATE_Off,
@@ -31,11 +32,27 @@ extern uint8_t T2event;
 extern uint8_t PBevent;
 extern uint8_t alarmFlag;
 extern volatile uint8_t doBlink;
+extern volatile uint8_t blinkFlag;
+extern volatile uint16_t pwm_threshold;
 volatile uint8_t doFullbright;
 
 #define HOLD_TIME 3000 // length of time (ms) for button to be considered a long press
 #define COMBO_TIME 100 // buttons must be pressed within 100ms of eachother to be counted as together
 #define REPEAT_DELAY 300 // time between repeating actions
+
+uint8_t getLEDIntensityPercent(void) {
+    uint8_t duty = (pwm_threshold * 100) / PWM_PERIOD;
+
+    if (doBlink) {
+        if (blinkFlag == 0) 
+            return 0;              // blinking OFF phase
+        else 
+            return duty;           // blinking ON phase
+    }
+
+    // if not blinking, always show intensity
+    return duty;
+}
 
 void InitIO() {
     
@@ -169,11 +186,10 @@ void handleIOstate() {
                 doBlink = 1;
                 doFullbright = 0;
             }
-//            else if(!PB1.isPressed && !PB2.isPressed && PB3.wasShortPressed) {
-//                Disp2String("Begin recording\n\r");
-//                state = STATE_Record;
-//                break;
-//            }
+            else if(!PB1.isPressed && !PB2.isPressed && PB3.wasShortPressed) {
+                Disp2String("Begin recording\n\r");
+                state = STATE_Record;
+            }
             break;
         }
         
@@ -202,11 +218,10 @@ void handleIOstate() {
                 PORTBbits.RB9 = 0;
                 PORTAbits.RA6 = 0;
             } 
-//            else if(!PB1.isPressed && !PB2.isPressed && PB3.wasShortPressed) {
-//                Disp2String("Begin recording\n\r");
-//                state = STATE_Record;
-//                break;
-//            }
+            else if(!PB1.isPressed && !PB2.isPressed && PB3.wasShortPressed) {
+                Disp2String("Begin recording\n\r");
+                state = STATE_Record;
+            }
             break;
         }
         
@@ -231,30 +246,25 @@ void handleIOstate() {
                 doBlink = 0;
                 doFullbright = 0;
             } 
-//            else if(!PB1.isPressed && !PB2.isPressed && PB3.wasShortPressed) {
-//                Disp2String("Begin recording\n\r");
-//                state = STATE_Record;
-//                break;
-//            }
+            else if(!PB1.isPressed && !PB2.isPressed && PB3.wasShortPressed) {
+                Disp2String("Begin recording\n\r");
+                state = STATE_Record;
+            }
             break;
         }
         
-//        case STATE_Record: {
-//            if(PB1.wasShortPressed && !PB2.isPressed && PB3.isPressed) {
+        case STATE_Record: {
+//            if(!PB1.isPressed && !PB2.isPressed && PB3.wasShortPressed) {
 //                Disp2String("Recording Finished. Transition to OFF\n\r");
 //                state = STATE_Off;
-//                break;
 //            }
-//            else if(!PB1.isPressed && !PB2.isPressed && PB3.wasShortPressed) {
-//                Disp2String("Recording Finished. Transition to ON\n\r");
-//                if(doBlink) {
-//                    state = STATE_Blink;
-//                }
-//                else {
-//                    state = STATE_OnSolid;
-//                }
-//                break;
-//            }
-//        }
+            
+            Disp2Dec(getLEDIntensityPercent());
+            Disp2String("\n\r");
+            
+            break;
+        }
     }
 }
+
+
