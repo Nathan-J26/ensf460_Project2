@@ -5,7 +5,7 @@ import pandas as pd
 
 PORT = 'COM3' # UART port Change if needed
 BAUD = 4800 
-DURATION = 60 # seconds to record data
+DURATION = 10 # seconds to record data
 
 print(f"Attempting to connect to {PORT}...")
 try:
@@ -18,31 +18,37 @@ except serial.serialutil.SerialException as e:
 print(f"Connected to {PORT} successfully.")
 
 ADCvalues = []
-voltageValues = []
+LEDvalues = []
 timeValues = []
 
 time.sleep(0.1)
 while(1): # waits until PB3 is pressed to begin sampling ADC
     line = ser.readline().decode('utf-8', errors='ignore').strip()
-    line = "".join([char for char in line if char.isalpha()])
-    print("Mode 1: Press PB3 to begin sampling\r", end='')
-    if(len(line) == 0): # if no alpha characters are read, that means PB3 was pressed
+
+    print("Press PB3 to begin sampling\r", end='')
+    if "," in line: # if line contains a comma, PB3 was pressed and data transmission has started.
         break # break to begin sampling
         
     time.sleep(0.1)
 
-print(f"Collecting {DURATION} seconds of data from {PORT}...")
-for i in range(DURATION * 10): # 60 seconds in 100ms increments
+print(f"\nCollecting {DURATION} seconds of data from {PORT}...")
+for i in range(DURATION * 10): # 100ms increments
     line = ser.readline().decode('utf-8', errors='ignore').strip()
-    line = "".join([char for char in line if char.isdecimal()]) # convert read string to proper format
-    print(f"ADC Reading: {line}")
-    try:
-        adcVal = int(line)
-        ADCvalues.append(adcVal)
-        voltageValues.append(3.3 * (adcVal / 1023))
-        timeValues.append(i/10)
-    except ValueError as e:
-        pass
+    if "," in line:
+        try:
+            adc_str, led_str = line.split(",")
+            adcVal = int(adc_str)
+            ledVal = int(led_str)
+
+            ADCvalues.append(adcVal)
+            LEDvalues.append(ledVal)
+            timeValues.append(i/10)
+
+            print(f"ADC: {adcVal}, LED: {ledVal}")
+
+        except ValueError:
+            pass # corrupted UART line, ignore
+
     time.sleep(0.1)
     
 print(f"Collected {len(ADCvalues)} ADC readings")
@@ -53,29 +59,29 @@ print(f"{PORT} closed")
 
 data = {
     "Time (s)": timeValues,
-    "ADC buffer": ADCvalues,
-    "ADC voltage": voltageValues
+    "ADC Readings (%)": ADCvalues,
+    "LED Intensity (%)": LEDvalues
 }
 
 df = pd.DataFrame(data)
 df.to_excel("output.xlsx", index=False)
 
-# PLOT 1: ADC Buffer VS Time
+# PLOT 1: ADC VS Time
 plt.plot(timeValues, ADCvalues)
-plt.title("ADC Buffer Readings VS. Time")
+plt.title("ADC Reading VS. Time")
 plt.xlabel("Time (s)")
-plt.xticks([i for i in range(0, 11, 1)])
-plt.ylabel("ADC Reading")
-plt.yticks([i for i in range(0, 1100, 50)])
+plt.ylabel("ADC Reading (%)")
+plt.xlim(-5, 15)
+plt.ylim(-5, 105)
 plt.grid(True)
 plt.show()
 
-# PLOT 2: ADC Voltage VS Time
-plt.plot(timeValues, voltageValues)
-plt.title("ADC Voltage Reading VS. Time")
+# PLOT 2: LED Intensity VS Time
+plt.plot(timeValues, LEDvalues)
+plt.title("LED Intensity VS. Time")
 plt.xlabel("Time (s)")
-plt.xticks([i for i in range(0, 11, 1)])
-plt.ylabel("ADC Voltage (V)")
-plt.yticks([i/10 for i in range(0, 40, 5)])
+plt.ylabel("LED Intensity (%)")
+plt.xlim(-5, 15)
+plt.ylim(-5, 105)
 plt.grid(True)
 plt.show()
