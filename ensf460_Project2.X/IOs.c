@@ -194,6 +194,7 @@ void handleIOstate() {
                     }
                 }
             }
+            
             else if((PB1.wasShortPressed || PB2.wasShortPressed) && !PB3.isPressed) {
                 Disp2String("Transition to OFF\n\r");
                 state = STATE_Off;
@@ -202,13 +203,13 @@ void handleIOstate() {
                 activeLED = 0;
                 PORTBbits.RB9 = 0;
                 PORTAbits.RA6 = 0;
-                break;
             } 
 //            else if(!PB1.isPressed && !PB2.isPressed && PB3.wasShortPressed) {
 //                Disp2String("Begin recording\n\r");
 //                state = STATE_Record;
 //                break;
 //            }
+            break;
         }
         
         case STATE_Blink: {
@@ -226,7 +227,7 @@ void handleIOstate() {
                     }
                 }
             }
-            else if((PB1.wasShortPressed || PB2.wasShortPressed) && !PB3.isPressed) {
+            else if(!PB1.isPressed && PB2.wasShortPressed && !PB3.isPressed) {
                 Disp2String("Transition to ON\n\r");
                 state = STATE_OnSolid;
                 doBlink = 0;
