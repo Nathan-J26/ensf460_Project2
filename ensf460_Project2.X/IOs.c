@@ -13,12 +13,23 @@
 #include "delay_ms.h"
 #include "button.h"
 
+typedef enum {
+    STATE_Off,
+    STATE_OnSolid,
+    STATE_BlinkFullbright,
+    STATE_Blink
+} state_t;
+
 Button_t PB1 = {0}, PB2 = {0}, PB3 = {0};
 
+state_t state = STATE_Off;
+
+volatile uint8_t activeLED = 0;
 extern uint32_t time;
 extern uint8_t T2event;
 extern uint8_t PBevent;
 extern uint8_t alarmFlag;
+extern volatile uint8_t doBlink;
 
 #define HOLD_TIME 3000 // length of time (ms) for button to be considered a long press
 #define COMBO_TIME 100 // buttons must be pressed within 100ms of eachother to be counted as together
@@ -75,11 +86,13 @@ void updateIOstate() {
             }
             // Held long enough
             else if (b->isPressed && (b->holdTime >= HOLD_TIME) && !b->wasHeld) {
+//                Disp2String("LONG PRESS\n\r");
                 b->wasHeld = 1;
                 b->wasShortPressed = 0;
             }
             // Released before hold flag
             else if (!b->isPressed && b->prevState && !b->wasHeld) {
+//                Disp2String("SHORT PRESS\n\r");
                 b->wasShortPressed = 1;
                 b->wasHeld = 0;
                 b->timeReleased = time;
@@ -94,7 +107,7 @@ void updateIOstate() {
             b->prevState = b->isPressed;
         }       
    
-//        handleIOstate();
+        handleIOstate();
         
     } while(PB1.isPressed | PB2.isPressed | PB3.isPressed);
         
@@ -102,4 +115,71 @@ void updateIOstate() {
     PB1.wasHeld = PB1.wasShortPressed = 0;
     PB2.wasHeld = PB2.wasShortPressed = 0;
     PB3.wasHeld = PB3.wasShortPressed = 0;
+}
+
+
+void handleIOstate() {
+    switch(state) {
+        case STATE_Off: {
+            if(PB1.wasShortPressed && !PB2.isPressed && !PB3.isPressed) {
+                Disp2String("Transition to ON SOLID\n\r");
+                activeLED = 1;
+                state = STATE_OnSolid;
+                doBlink = 0;
+                break;
+            }
+            else if (!PB1.isPressed && PB2.wasShortPressed && !PB3.isPressed) {
+                Disp2String("Transition to Blink at 100%\n\r");
+                state = STATE_BlinkFullbright;
+                doBlink = 1;
+                break;
+            }
+            break;
+        }
+        
+        case STATE_OnSolid: {
+            
+            if(PB1.isPressed && !PB2.isPressed && !PB3.isPressed) {
+                if(PB1.wasHeld) {
+                    if(activeLED == 1) {
+                        activeLED = 2;
+                        Disp2String("Setting LED2\n\r");
+                        delay_ms(500);
+                    }
+                    else {
+                        Disp2String("Setting LED1\n\r");
+                        activeLED = 1;
+                        delay_ms(500);
+                    }
+                }
+            }
+            else if(PB1.wasShortPressed && !PB2.isPressed && !PB3.isPressed) {
+                Disp2String("Transition to OFF\n\r");
+                state = STATE_Off;
+                PORTBbits.RB9 = 0;
+                PORTAbits.RA6 = 0;
+                activeLED = 0;
+            }
+            else if(PB2.wasShortPressed) {
+                Disp2String("Transition to Blink\n\r");
+                state = STATE_Blink;
+                doBlink = 1;
+            }
+            break;
+        }
+        
+        case STATE_BlinkFullbright: {
+            if(PB1.wasShortPressed || PB2.wasShortPressed) {
+                Disp2String("Transition to OFF\n\r");
+                state = STATE_Off;
+                doBlink = 0;
+                activeLED = 0;
+                break;
+            } 
+        }
+        
+        case STATE_Blink: {
+            
+        }
+    }
 }

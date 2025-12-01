@@ -18,7 +18,7 @@ void InitTimers() {
     T2CONbits.TCS = 0; // use internal clock
     T2CONbits.TSIDL = 0; //operate in idle mode
     
-    PR2 = (uint16_t)(31250); // set the count value
+    PR2 = (uint16_t)(5000); // set the count value (10ms interrupts)
     TMR2 = 0;
     
     // Initalize Timer3

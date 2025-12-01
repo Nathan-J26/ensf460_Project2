@@ -19,7 +19,7 @@ void delay_ms(uint16_t time_ms) {
     T1CONbits.TCS = 0; // use internal clock
     T1CONbits.TSIDL = 0; //operate in idle mode
     
-    PR1 = (uint16_t)(0.9765625 * time_ms); // set the count value
+    PR1 = (uint16_t)(15.625 * time_ms); // set the count value
     TMR1 = 0;
     T1CONbits.TON = 1;
     

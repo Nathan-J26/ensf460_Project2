@@ -60,7 +60,7 @@
 #include "pwm.h"
 
 extern uint8_t PBevent;
-extern uint8_t T3event;
+extern uint8_t T1event, T3event;
 volatile uint16_t pwm_threshold;
 
 int main(void) {
@@ -76,21 +76,23 @@ int main(void) {
     
     clearTerminal(); // ensure terminal is cleared
     
-    startTimer3(); // tracks time since program start
+    startTimer2(); // tracks time since program start
+    startTimer3(); 
 
     while(1) {
         Idle();
         
         if(PBevent) {
+//            Disp2String("PB EVENT\n\r");
             PBevent = 0;
             updateIOstate();
+        }
+        if(T1event) {
+            Disp2String("T1 event\n\r");
         }
         if(T3event) {
             T3event = 0;
             uint16_t bright = do_ADC(1);
-            Disp2Dec(bright);
-            Disp2String("\n\r");
-//            do_PWM(bright);
             pwm_threshold = bright * PWM_PERIOD / 100;
         }
         

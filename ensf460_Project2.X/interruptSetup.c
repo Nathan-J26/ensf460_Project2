@@ -38,8 +38,13 @@ void InitInterrupt() {
 
 // ISR Definitions
 uint8_t PBevent, T1event, T2event, T3event = 0; // global interrupt flags
+volatile uint8_t ledBlinkState = 1;
+volatile uint8_t counter = 0;
+volatile uint8_t blinkFlag = 1;
+volatile uint8_t doBlink = 0;
 uint32_t time = 0; //tracks the time passed since program start
 extern volatile uint16_t pwm_threshold;
+extern volatile uint8_t activeLED;
 
 void __attribute__((interrupt, no_auto_psv)) _CNInterrupt(void) {
     IFS1bits.CNIF = 0; // Clear CN Interrupt Flag
@@ -53,12 +58,19 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
 
 void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void) {
     IFS0bits.T2IF = 0; // Clear Timer2 Interrupt Flag
+    time += 10;
+    counter += 1;
+    if(counter >= 50) {
+        counter = 0;
+        if(doBlink) {
+            blinkFlag ^= 1;
+        }
+    }
     T2event = 1;
 }
 
 void __attribute__((interrupt, no_auto_psv)) _T3Interrupt(void) {
     IFS0bits.T3IF = 0;
-    time += 1;
     T3event = 1;
     
     static uint16_t pwm_counter = 0;
@@ -66,6 +78,19 @@ void __attribute__((interrupt, no_auto_psv)) _T3Interrupt(void) {
     pwm_counter++;
     if (pwm_counter >= PWM_PERIOD) pwm_counter = 0;
 
-
-    PORTBbits.RB9 = (pwm_counter < pwm_threshold);
+    if(activeLED) {
+        if(activeLED == 1) {
+            PORTBbits.RB9 = ((pwm_counter < pwm_threshold) && blinkFlag);
+            PORTAbits.RA6 = 0;
+        }
+        else if(activeLED == 2) {
+            PORTBbits.RB9 = 0;
+            PORTAbits.RA6 = ((pwm_counter < pwm_threshold) && blinkFlag);
+        }
+    }
+    else {
+        PORTBbits.RB9 = 0;
+        PORTAbits.RA6 = 0;
+    }
+ 
 }
