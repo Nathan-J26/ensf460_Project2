@@ -78,14 +78,16 @@ void __attribute__((interrupt, no_auto_psv)) _T3Interrupt(void) {
     pwm_counter++;
     if (pwm_counter >= PWM_PERIOD) pwm_counter = 0;
 
-    if(activeLED) {
+    uint8_t blink_enable = (doBlink ? blinkFlag : 1);
+    
+    if(activeLED != 0) {
         if(activeLED == 1) {
-            PORTBbits.RB9 = ((pwm_counter < pwm_threshold) && blinkFlag);
+            PORTBbits.RB9 = ((pwm_counter < pwm_threshold) && blink_enable);
             PORTAbits.RA6 = 0;
         }
         else if(activeLED == 2) {
             PORTBbits.RB9 = 0;
-            PORTAbits.RA6 = ((pwm_counter < pwm_threshold) && blinkFlag);
+            PORTAbits.RA6 = ((pwm_counter < pwm_threshold) && blink_enable);
         }
     }
     else {

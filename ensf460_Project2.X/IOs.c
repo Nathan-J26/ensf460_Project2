@@ -17,7 +17,8 @@ typedef enum {
     STATE_Off,
     STATE_OnSolid,
     STATE_BlinkFullbright,
-    STATE_Blink
+    STATE_Blink,
+    STATE_Record
 } state_t;
 
 Button_t PB1 = {0}, PB2 = {0}, PB3 = {0};
@@ -131,6 +132,7 @@ void handleIOstate() {
             else if (!PB1.isPressed && PB2.wasShortPressed && !PB3.isPressed) {
                 Disp2String("Transition to Blink at 100%\n\r");
                 state = STATE_BlinkFullbright;
+                activeLED = 1;
                 doBlink = 1;
                 break;
             }
@@ -160,26 +162,96 @@ void handleIOstate() {
                 PORTAbits.RA6 = 0;
                 activeLED = 0;
             }
-            else if(PB2.wasShortPressed) {
+            else if(!PB1.isPressed && PB2.wasShortPressed && !PB3.isPressed) {
                 Disp2String("Transition to Blink\n\r");
                 state = STATE_Blink;
                 doBlink = 1;
             }
+//            else if(!PB1.isPressed && !PB2.isPressed && PB3.wasShortPressed) {
+//                Disp2String("Begin recording\n\r");
+//                state = STATE_Record;
+//                break;
+//            }
             break;
         }
         
         case STATE_BlinkFullbright: {
-            if(PB1.wasShortPressed || PB2.wasShortPressed) {
+            if(PB1.isPressed && !PB2.isPressed && !PB3.isPressed) {
+                if(PB1.wasHeld) {
+                    if(activeLED == 1) {
+                        activeLED = 2;
+                        Disp2String("Setting LED2\n\r");
+                        delay_ms(500);
+                    }
+                    else {
+                        Disp2String("Setting LED1\n\r");
+                        activeLED = 1;
+                        delay_ms(500);
+                    }
+                }
+            }
+            else if((PB1.wasShortPressed || PB2.wasShortPressed) && !PB3.isPressed) {
                 Disp2String("Transition to OFF\n\r");
                 state = STATE_Off;
                 doBlink = 0;
                 activeLED = 0;
+                PORTBbits.RB9 = 0;
+                PORTAbits.RA6 = 0;
                 break;
             } 
+//            else if(!PB1.isPressed && !PB2.isPressed && PB3.wasShortPressed) {
+//                Disp2String("Begin recording\n\r");
+//                state = STATE_Record;
+//                break;
+//            }
         }
         
         case STATE_Blink: {
-            
+            if(PB1.isPressed && !PB2.isPressed && !PB3.isPressed) {
+                if(PB1.wasHeld) {
+                    if(activeLED == 1) {
+                        activeLED = 2;
+                        Disp2String("Setting LED2\n\r");
+                        delay_ms(500);
+                    }
+                    else {
+                        Disp2String("Setting LED1\n\r");
+                        activeLED = 1;
+                        delay_ms(500);
+                    }
+                }
+            }
+            else if((PB1.wasShortPressed || PB2.wasShortPressed) && !PB3.isPressed) {
+                Disp2String("Transition to ON\n\r");
+                state = STATE_OnSolid;
+                doBlink = 0;
+
+                
+                break;
+            } 
+//            else if(!PB1.isPressed && !PB2.isPressed && PB3.wasShortPressed) {
+//                Disp2String("Begin recording\n\r");
+//                state = STATE_Record;
+//                break;
+//            }
         }
+        
+//        case STATE_Record: {
+//            if(PB1.wasShortPressed && !PB2.isPressed && PB3.isPressed) {
+//                Disp2String("Recording Finished. Transition to OFF\n\r");
+//                state = STATE_Off;
+//                break;
+//            }
+//            else if(!PB1.isPressed && !PB2.isPressed && PB3.wasShortPressed) {
+//                Disp2String("Recording Finished. Transition to ON\n\r");
+//                if(doBlink) {
+//                    state = STATE_Blink;
+//                }
+//                else {
+//                    state = STATE_OnSolid;
+//                }
+//                break;
+//            }
+//        }
     }
 }

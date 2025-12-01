@@ -83,12 +83,8 @@ int main(void) {
         Idle();
         
         if(PBevent) {
-//            Disp2String("PB EVENT\n\r");
             PBevent = 0;
             updateIOstate();
-        }
-        if(T1event) {
-            Disp2String("T1 event\n\r");
         }
         if(T3event) {
             T3event = 0;
