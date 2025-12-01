@@ -31,6 +31,7 @@ extern uint8_t T2event;
 extern uint8_t PBevent;
 extern uint8_t alarmFlag;
 extern volatile uint8_t doBlink;
+volatile uint8_t doFullbright;
 
 #define HOLD_TIME 3000 // length of time (ms) for button to be considered a long press
 #define COMBO_TIME 100 // buttons must be pressed within 100ms of eachother to be counted as together
@@ -127,6 +128,7 @@ void handleIOstate() {
                 activeLED = 1;
                 state = STATE_OnSolid;
                 doBlink = 0;
+                doFullbright = 0;
                 break;
             }
             else if (!PB1.isPressed && PB2.wasShortPressed && !PB3.isPressed) {
@@ -134,6 +136,7 @@ void handleIOstate() {
                 state = STATE_BlinkFullbright;
                 activeLED = 1;
                 doBlink = 1;
+                doFullbright = 1;
                 break;
             }
             break;
@@ -166,6 +169,7 @@ void handleIOstate() {
                 Disp2String("Transition to Blink\n\r");
                 state = STATE_Blink;
                 doBlink = 1;
+                doFullbright = 0;
             }
 //            else if(!PB1.isPressed && !PB2.isPressed && PB3.wasShortPressed) {
 //                Disp2String("Begin recording\n\r");
@@ -194,6 +198,7 @@ void handleIOstate() {
                 Disp2String("Transition to OFF\n\r");
                 state = STATE_Off;
                 doBlink = 0;
+                doFullbright = 0;
                 activeLED = 0;
                 PORTBbits.RB9 = 0;
                 PORTAbits.RA6 = 0;
@@ -225,7 +230,7 @@ void handleIOstate() {
                 Disp2String("Transition to ON\n\r");
                 state = STATE_OnSolid;
                 doBlink = 0;
-
+                doFullbright = 0;
                 
                 break;
             } 
