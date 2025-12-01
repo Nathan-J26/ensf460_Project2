@@ -2,10 +2,15 @@ import serial
 import time
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 
 PORT = 'COM3' # UART port Change if needed
-BAUD = 4800 
-DURATION = 10 # seconds to record data
+BAUD = 9600 
+DURATION = 60 # seconds to record data
+SAMPLE_RATE = 0.001
+
+def clean_entry(s):
+    return "".join(c for c in s if c.isdigit() or c == ',')
 
 print(f"Attempting to connect to {PORT}...")
 try:
@@ -17,45 +22,67 @@ except serial.serialutil.SerialException as e:
     exit(1)
 print(f"Connected to {PORT} successfully.")
 
+string = ""
 ADCvalues = []
 LEDvalues = []
 timeValues = []
 
 time.sleep(0.1)
-while(1): # waits until PB3 is pressed to begin sampling ADC
-    line = ser.readline().decode('utf-8', errors='ignore').strip()
 
-    print("Press PB3 to begin sampling\r", end='')
-    if "," in line: # if line contains a comma, PB3 was pressed and data transmission has started.
+print("Press PB3 to begin sampling\r", end='')
+while(1): # waits until PB3 is pressed to begin sampling ADC
+    raw = ser.readline().decode('utf-8', errors='ignore').strip()
+    clean = "".join([c for c in raw if c.isdigit() or c == "," or c == "-"])
+
+    if "," in clean: # if line contains a comma, PB3 was pressed and data transmission has started.
         break # break to begin sampling
         
     time.sleep(0.1)
 
 print(f"\nCollecting {DURATION} seconds of data from {PORT}...")
-for i in range(DURATION * 10): # 100ms increments
+for i in range(DURATION * int((1/SAMPLE_RATE))): # 1ms increments
     line = ser.readline().decode('utf-8', errors='ignore').strip()
-    if "," in line:
-        try:
-            adc_str, led_str = line.split(",")
-            adcVal = int(adc_str)
-            ledVal = int(led_str)
+    string += line
 
-            ADCvalues.append(adcVal)
-            LEDvalues.append(ledVal)
-            timeValues.append(i/10)
 
-            print(f"ADC: {adcVal}, LED: {ledVal}")
+    time.sleep(SAMPLE_RATE)
 
-        except ValueError:
-            pass # corrupted UART line, ignore
 
-    time.sleep(0.1)
-    
+readings = string.split(";")
+readings.pop()
+
+for entry in readings:
+    entry = clean_entry(entry)
+
+    if not entry or "," not in entry:
+        continue  # skip corrupted chunks
+
+
+    parts = entry.split(",")
+
+    if len(parts) != 2: # skip incomplete parts
+        continue
+
+    adc_str, led_str = parts
+
+    try:
+        adc_val = int(adc_str)
+        led_val = int(led_str)
+
+    except ValueError:
+        continue  # skip totally corrupted items
+
+    ADCvalues.append(adc_val)
+    LEDvalues.append(led_val)
+
+
+timeValues = np.linspace(0, DURATION, len(ADCvalues))
 print(f"Collected {len(ADCvalues)} ADC readings")
 
 print("Closing serial connection...")
 ser.close()
 print(f"{PORT} closed")
+
 
 data = {
     "Time (s)": timeValues,
@@ -66,22 +93,21 @@ data = {
 df = pd.DataFrame(data)
 df.to_excel("output.xlsx", index=False)
 
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8), sharex=True)
+
 # PLOT 1: ADC VS Time
-plt.plot(timeValues, ADCvalues)
-plt.title("ADC Reading VS. Time")
-plt.xlabel("Time (s)")
-plt.ylabel("ADC Reading (%)")
-plt.xlim(-5, 15)
-plt.ylim(-5, 105)
-plt.grid(True)
-plt.show()
+ax1.plot(timeValues, ADCvalues)
+ax1.set_title("ADC Reading VS. Time")
+ax1.set_xlabel("Time (s)")
+ax1.set_ylabel("ADC Reading (%)")
+ax1.grid(True)
 
 # PLOT 2: LED Intensity VS Time
-plt.plot(timeValues, LEDvalues)
-plt.title("LED Intensity VS. Time")
-plt.xlabel("Time (s)")
-plt.ylabel("LED Intensity (%)")
-plt.xlim(-5, 15)
-plt.ylim(-5, 105)
-plt.grid(True)
+ax2.plot(timeValues, LEDvalues)
+ax2.set_title("LED Intensity VS. Time")
+ax2.set_xlabel("Time (s)")
+ax2.set_ylabel("LED Intensity (%)")
+ax2.grid(True)
+
+plt.tight_layout()
 plt.show()

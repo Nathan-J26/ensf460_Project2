@@ -97,7 +97,7 @@ int main(void) {
                 Disp2Dec(bright); 
                 Disp2String(",");
                 Disp2Dec(getLEDIntensityPercent());
-                Disp2String("\n\r");
+                Disp2String(";\r\n");
             }
         }
         

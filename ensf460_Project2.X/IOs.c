@@ -143,14 +143,14 @@ void handleIOstate() {
     switch(state) {
         case STATE_Off: {
             if(PB1.wasShortPressed && !PB2.isPressed && !PB3.isPressed) {
-                Disp2String("Transition to ON SOLID\n\r");
+//                Disp2String("Transition to ON SOLID\n\r");
                 activeLED = 1;
                 state = STATE_OnSolid;
                 doBlink = 0;
                 doFullbright = 0;
             }
             else if (!PB1.isPressed && PB2.wasShortPressed && !PB3.isPressed) {
-                Disp2String("Transition to Blink at 100%\n\r");
+//                Disp2String("Transition to Blink at 100%\n\r");
                 state = STATE_BlinkFullbright;
                 activeLED = 1;
                 doBlink = 1;
@@ -165,31 +165,31 @@ void handleIOstate() {
                 if(PB1.wasHeld) {
                     if(activeLED == 1) {
                         activeLED = 2;
-                        Disp2String("Setting LED2\n\r");
+//                        Disp2String("Setting LED2\n\r");
                         delay_ms(500);
                     }
                     else {
-                        Disp2String("Setting LED1\n\r");
+//                        Disp2String("Setting LED1\n\r");
                         activeLED = 1;
                         delay_ms(500);
                     }
                 }
             }
             else if(PB1.wasShortPressed && !PB2.isPressed && !PB3.isPressed) {
-                Disp2String("Transition to OFF\n\r");
+//                Disp2String("Transition to OFF\n\r");
                 state = STATE_Off;
                 PORTBbits.RB9 = 0;
                 PORTAbits.RA6 = 0;
                 activeLED = 0;
             }
             else if(!PB1.isPressed && PB2.wasShortPressed && !PB3.isPressed) {
-                Disp2String("Transition to Blink\n\r");
+//                Disp2String("Transition to Blink\n\r");
                 state = STATE_Blink;
                 doBlink = 1;
                 doFullbright = 0;
             }
             else if(!PB1.isPressed && !PB2.isPressed && PB3.wasShortPressed) {
-                Disp2String("Toggle recording\n\r");
+                Disp2String("Toggle recording\r\n");
                 doRecording ^= 1;
             }
             break;
@@ -200,11 +200,11 @@ void handleIOstate() {
                 if(PB1.wasHeld) {
                     if(activeLED == 1) {
                         activeLED = 2;
-                        Disp2String("Setting LED2\n\r");
+//                        Disp2String("Setting LED2\n\r");
                         delay_ms(500);
                     }
                     else {
-                        Disp2String("Setting LED1\n\r");
+//                        Disp2String("Setting LED1\n\r");
                         activeLED = 1;
                         delay_ms(500);
                     }
@@ -212,7 +212,7 @@ void handleIOstate() {
             }
             
             else if((PB1.wasShortPressed || PB2.wasShortPressed) && !PB3.isPressed) {
-                Disp2String("Transition to OFF\n\r");
+//                Disp2String("Transition to OFF\n\r");
                 state = STATE_Off;
                 doBlink = 0;
                 doFullbright = 0;
@@ -221,7 +221,7 @@ void handleIOstate() {
                 PORTAbits.RA6 = 0;
             } 
             else if(!PB1.isPressed && !PB2.isPressed && PB3.wasShortPressed) {
-                Disp2String("Toggle recording\n\r");
+                Disp2String("Toggle recording\r\n");
                 doRecording ^= 1;
             }
             break;
@@ -232,24 +232,23 @@ void handleIOstate() {
                 if(PB1.wasHeld) {
                     if(activeLED == 1) {
                         activeLED = 2;
-                        Disp2String("Setting LED2\n\r");
+//                        Disp2String("Setting LED2\n\r");
                         delay_ms(500);
                     }
                     else {
-                        Disp2String("Setting LED1\n\r");
+//                        Disp2String("Setting LED1\n\r");
                         activeLED = 1;
                         delay_ms(500);
                     }
                 }
             }
             else if(!PB1.isPressed && PB2.wasShortPressed && !PB3.isPressed) {
-                Disp2String("Transition to ON\n\r");
                 state = STATE_OnSolid;
                 doBlink = 0;
                 doFullbright = 0;
             } 
             else if(!PB1.isPressed && !PB2.isPressed && PB3.wasShortPressed) {
-                Disp2String("Toggle recording\n\r");
+                Disp2String("Toggle recording\r\n");
                 doRecording ^= 1;
             }
             break;
