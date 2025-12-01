@@ -18,8 +18,8 @@ typedef enum {
     STATE_Off,
     STATE_OnSolid,
     STATE_BlinkFullbright,
-    STATE_Blink,
-    STATE_Record
+    STATE_Blink
+//    STATE_Record
 } state_t;
 
 Button_t PB1 = {0}, PB2 = {0}, PB3 = {0};
@@ -35,6 +35,7 @@ extern volatile uint8_t doBlink;
 extern volatile uint8_t blinkFlag;
 extern volatile uint16_t pwm_threshold;
 volatile uint8_t doFullbright;
+extern volatile uint8_t doRecording;
 
 #define HOLD_TIME 3000 // length of time (ms) for button to be considered a long press
 #define COMBO_TIME 100 // buttons must be pressed within 100ms of eachother to be counted as together
@@ -44,11 +45,12 @@ uint8_t getLEDIntensityPercent(void) {
     uint8_t duty = (pwm_threshold * 100) / PWM_PERIOD;
 
     if (doBlink) {
-        if (blinkFlag == 0) 
+        if (blinkFlag == 0)
             return 0;              // blinking OFF phase
         else 
             return duty;           // blinking ON phase
     }
+    if(activeLED == 0) return 0;
 
     // if not blinking, always show intensity
     return duty;
@@ -187,8 +189,8 @@ void handleIOstate() {
                 doFullbright = 0;
             }
             else if(!PB1.isPressed && !PB2.isPressed && PB3.wasShortPressed) {
-                Disp2String("Begin recording\n\r");
-                state = STATE_Record;
+                Disp2String("Toggle recording\n\r");
+                doRecording ^= 1;
             }
             break;
         }
@@ -219,8 +221,8 @@ void handleIOstate() {
                 PORTAbits.RA6 = 0;
             } 
             else if(!PB1.isPressed && !PB2.isPressed && PB3.wasShortPressed) {
-                Disp2String("Begin recording\n\r");
-                state = STATE_Record;
+                Disp2String("Toggle recording\n\r");
+                doRecording ^= 1;
             }
             break;
         }
@@ -247,23 +249,25 @@ void handleIOstate() {
                 doFullbright = 0;
             } 
             else if(!PB1.isPressed && !PB2.isPressed && PB3.wasShortPressed) {
-                Disp2String("Begin recording\n\r");
-                state = STATE_Record;
+                Disp2String("Toggle recording\n\r");
+                doRecording ^= 1;
             }
             break;
         }
         
-        case STATE_Record: {
+//        case STATE_Record: {
+//            doRecording = 1;
 //            if(!PB1.isPressed && !PB2.isPressed && PB3.wasShortPressed) {
 //                Disp2String("Recording Finished. Transition to OFF\n\r");
+//                doRecording = 0;
+//                doBlink = 0;
+//                doFullbright = 0;
+//                activeLED = 0;
 //                state = STATE_Off;
 //            }
-            
-            Disp2Dec(getLEDIntensityPercent());
-            Disp2String("\n\r");
-            
-            break;
-        }
+//            
+//            break;
+//        }
     }
 }
 

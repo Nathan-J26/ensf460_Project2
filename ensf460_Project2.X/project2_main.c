@@ -63,6 +63,7 @@ extern uint8_t PBevent;
 extern uint8_t T1event, T3event;
 volatile uint16_t pwm_threshold;
 extern volatile uint8_t doFullbright;
+volatile uint8_t doRecording = 0;
 
 int main(void) {
 //    newClk(500); // set the clock to 500kHz
@@ -91,6 +92,13 @@ int main(void) {
             T3event = 0;
             uint16_t bright = do_ADC(1);
             pwm_threshold = (doFullbright ? -1 : (bright * PWM_PERIOD / 100));
+            if(doRecording) {
+                // display ADC percentage and LED intensity, seperated by a comma
+                Disp2Dec(bright); 
+                Disp2String(",");
+                Disp2Dec(getLEDIntensityPercent());
+                Disp2String("\n\r");
+            }
         }
         
     }
