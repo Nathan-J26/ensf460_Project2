@@ -129,7 +129,6 @@ void handleIOstate() {
                 state = STATE_OnSolid;
                 doBlink = 0;
                 doFullbright = 0;
-                break;
             }
             else if (!PB1.isPressed && PB2.wasShortPressed && !PB3.isPressed) {
                 Disp2String("Transition to Blink at 100%\n\r");
@@ -137,7 +136,6 @@ void handleIOstate() {
                 activeLED = 1;
                 doBlink = 1;
                 doFullbright = 1;
-                break;
             }
             break;
         }
@@ -232,14 +230,13 @@ void handleIOstate() {
                 state = STATE_OnSolid;
                 doBlink = 0;
                 doFullbright = 0;
-                
-                break;
             } 
 //            else if(!PB1.isPressed && !PB2.isPressed && PB3.wasShortPressed) {
 //                Disp2String("Begin recording\n\r");
 //                state = STATE_Record;
 //                break;
 //            }
+            break;
         }
         
 //        case STATE_Record: {
